@@ -1,0 +1,63 @@
+=========================
+Environment Variables (CRITICAL)
+=========================
+NEVER commit actual API keys or database passwords.
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
+(Optional: allow a template file so your friend knows what keys are needed)
+!.env.example
+
+=========================
+Python / FastAPI (The Brain)
+=========================
+pycache/
+*.py[cod]
+*$py.class
+*.so
+
+Virtual Environments
+venv/
+.venv/
+env/
+.env_python/
+
+Testing & Logs
+.pytest_cache/
+.coverage
+htmlcov/
+.log
+
+=========================
+Node.js (The Face - Backend)
+=========================
+node_modules/
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+=========================
+React (The Face - Frontend)
+=========================
+Build output folders (these are generated, so don't commit them)
+build/
+dist/
+out/
+
+React testing/cache
+.eslintcache
+coverage/
+
+=========================
+Operating System & IDEs
+=========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
