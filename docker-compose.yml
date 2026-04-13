@@ -1,59 +1,45 @@
-version: '3.8'
-
 services:
-  # ==========================================
-  # 1. The Python AI Agent (The Brain)
-  # ==========================================
+  # 1. The Python AI Agent
   brain-api:
     build: ./brain-fastapi
     ports:
       - "8000:8000"
     volumes:
-      # This links your local folder to the container for hot-reloading
-      - ./brain-fastapi:/app  
+      - ./brain-fastapi:/app
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - WEATHER_API_KEY=${WEATHER_API_KEY}
-    # Command starts the server with auto-reload enabled
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload 
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - supply-chain-network
 
-  # ==========================================
-  # 2. The Node.js Server (The Face - Backend)
-  # ==========================================
+  # 2. The Node.js Server
   face-backend:
-    build: ./face-backend-node
+    build: ./backend-node # Changed to match your screenshot
     ports:
       - "3000:3000"
     volumes:
-      - ./face-backend-node:/usr/src/app
-      # This prevents your local node_modules from conflicting with the container's
-      - /usr/src/app/node_modules 
+      - ./backend-node:/usr/src/app
+      - /usr/src/app/node_modules
     environment:
-      # This URL uses Docker's internal DNS to find the Python server
-      - FASTAPI_URL=http://brain-api:8000 
+      - FASTAPI_URL=http://brain-api:8000
       - DATABASE_URL=${DATABASE_URL}
-    # Using nodemon for hot-reloading (make sure nodemon is in package.json)
-    command: npx nodemon server.js 
+    command: npx nodemon server.js
     networks:
       - supply-chain-network
     depends_on:
       - brain-api
 
-  # ==========================================
-  # 3. The React Vite App (The Face - Frontend)
-  # ==========================================
+  # 3. The React Frontend
   face-frontend:
     build: 
-      context: ./face-frontend-react
+      context: ./frontend # Changed to match your screenshot
     ports:
-      - "5173:5173" 
+      - "5173:5173"
     volumes:
-      - ./face-frontend-react:/app
+      - ./frontend:/app
       - /app/node_modules
-    # The --host flag is CRITICAL for Vite inside Docker
-    command: npm run dev -- --host 
+    command: npm run dev -- --host
     networks:
       - supply-chain-network
     depends_on:
