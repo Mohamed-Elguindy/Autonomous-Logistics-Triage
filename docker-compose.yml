@@ -17,7 +17,7 @@ services:
   face-backend:
     build: ./backend-node # Changed to match your screenshot
     ports:
-      - "3000:3000"
+      - "5000:5000"
     volumes:
       - ./backend-node:/usr/src/app
       - /usr/src/app/node_modules
