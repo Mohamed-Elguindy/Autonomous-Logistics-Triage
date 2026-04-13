@@ -1,6 +1,12 @@
 import express from "express";
-import { getAllShipments } from "../controllers/shipmentController.js";
+import {
+  getAllShipments,
+  analyzeRisk,
+} from "../controllers/shipmentController.js";
+
 const router = express.Router();
+
 router.get("/", getAllShipments);
+router.post("/analyze-risk", analyzeRisk);
 
 export default router;
