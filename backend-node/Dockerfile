@@ -1,6 +1,5 @@
 # Use official Node.js Alpine image
-FROM node:20-alpine
-
+FROM node:24.11.1-alpine
 # Set the working directory
 WORKDIR /usr/src/app
 
@@ -11,4 +10,4 @@ COPY package*.json ./
 RUN npm install
 
 # Expose the port Node runs on
-EXPOSE 3000
+EXPOSE 5000
