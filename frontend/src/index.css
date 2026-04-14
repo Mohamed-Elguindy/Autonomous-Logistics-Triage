@@ -1,5 +1,143 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+}
+
+.app-container {
   padding: 20px;
+}
+
+.app-title {
+  margin-bottom: 20px;
+}
+
+.mapview-container {
+  display: grid;
+  gap: 16px;
+}
+
+.shipment-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.shipment-badge {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.shipment-safe {
+  background: green;
+}
+
+.shipment-warning {
+  background: orange;
+}
+
+.shipment-danger {
+  background: red;
+}
+
+.flashing {
+  animation: flash 1s infinite;
+}
+
+.risk-panel {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f0f0f0;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.leaflet-map {
+  width: 100%;
+  height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.custom-pin-icon {
+  width: 25px;
+  height: 41px;
+  display: block;
+}
+
+.red-marker-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.red-marker-pulse {
+  animation: flash 1s infinite;
+}
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ai-panel-toggle {
+  background: #1f2937;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.ai-panel-toggle:hover {
+  opacity: 0.9;
+}
+
+.dashboard-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.ai-panel {
+  width: 320px;
+  min-height: 500px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ai-panel-title {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.ai-panel-content p {
+  margin-bottom: 10px;
+  line-height: 1.5;
 }
