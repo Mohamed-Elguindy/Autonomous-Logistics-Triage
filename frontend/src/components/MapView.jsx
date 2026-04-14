@@ -34,25 +34,29 @@ function MapView({ shipments }) {
   const [riskResults, setRiskResults] = useState({});
 
   useEffect(() => {
-    const checkAllRisks = async () => {
-      const results = {};
+    const checkInitialRisks = async () => {
+      const newResults = { ...riskResults };
 
       for (const shipment of shipments) {
+        if (newResults[shipment.shipment_id]) {
+          continue;
+        }
+
         try {
           const response = await analyzeRisk(shipment);
-          results[shipment.shipment_id] = response.data;
+          newResults[shipment.shipment_id] = response.data;
         } catch (error) {
           console.error(`Risk check failed for ${shipment.shipment_id}`, error);
         }
       }
 
-      setRiskResults(results);
+      setRiskResults(newResults);
     };
 
     if (shipments.length > 0) {
-      checkAllRisks();
+      checkInitialRisks();
     }
-  }, [shipments]);
+  }, [shipments.length]);
 
   const getMarkerIcon = (shipment) => {
     const risk = riskResults[shipment.shipment_id];
