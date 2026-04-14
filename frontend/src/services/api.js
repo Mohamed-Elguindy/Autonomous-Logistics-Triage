@@ -15,8 +15,8 @@ export const analyzeRisk = async (shipment) => {
       lng: Number(shipment.current_lng),
     },
     destination: {
-      lat: Number(shipment.current_lat),
-      lng: Number(shipment.current_lng),
+      lat: Number(shipment.destination_lat),
+      lng: Number(shipment.destination_lng),
     },
     cargo_type: shipment.cargo_type,
   };
