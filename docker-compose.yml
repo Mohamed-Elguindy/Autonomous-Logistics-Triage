@@ -24,7 +24,7 @@ services:
     environment:
       - FASTAPI_URL=http://brain-api:8000
       - DATABASE_URL=${DATABASE_URL}
-    command: npx nodemon server.js
+    command: npx nodemon src/server.js
     networks:
       - supply-chain-network
     depends_on:
