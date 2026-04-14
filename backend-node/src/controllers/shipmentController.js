@@ -23,7 +23,7 @@ export const analyzeRisk = async (req, res) => {
     const shipmentData = req.body;
 
     const response = await axios.post(
-      "http://127.0.0.1:8000/api/v1/analyze-risk",
+      "http://brain-api:8000/api/v1/analyze-risk",
       shipmentData,
     );
 
