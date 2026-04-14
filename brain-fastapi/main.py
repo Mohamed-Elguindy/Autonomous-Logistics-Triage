@@ -1,12 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import health
+from routers import risk
+from dotenv import load_dotenv
+import os
+
+load_dotenv() # This loads the variables from .env into the environment
 # Placeholder for your router imports
 # from routers import my_router 
 
 # 1. Create the FastAPI app instance
 app = FastAPI(title="Logistics AI API")
 app.include_router(health.router)  
+app.include_router(risk.router)
 
 # 2. Add CORS middleware (allowing all origins for development)
 app.add_middleware(

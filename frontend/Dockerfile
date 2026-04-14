@@ -1,6 +1,5 @@
 # Use official Node.js image
-FROM node:20-alpine
-
+FROM node:24.11.1-alpine
 # Set the working directory
 WORKDIR /app
 
@@ -13,4 +12,3 @@ RUN npm install
 # Expose the Vite port
 EXPOSE 5173
 
-# We don't COPY . here because we use volumes in docker-compose for dev

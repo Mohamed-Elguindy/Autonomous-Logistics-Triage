@@ -2,9 +2,11 @@ import httpx
 import os
 import asyncio # New import for concurrency if needed
 from dotenv import load_dotenv
-
+from ddgs import DDGS
 load_dotenv()
-
+import feedparser
+import urllib.parse
+import logging
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 NEWSAPI_URL = "https://newsapi.org/v2/everything"
 
@@ -54,7 +56,7 @@ async def fetch_news(keyword: str, page_size: int = 5) -> list[dict]:
         "published_at": a.get("publishedAt", ""),
         "source": a.get("source", {}).get("name", ""),
     } for a in articles]
-
+""""
 async def fetch_risk_news_for_region(region: str) -> list[dict]:
     all_articles = []
 
@@ -73,7 +75,90 @@ async def fetch_risk_news_for_region(region: str) -> list[dict]:
             unique_articles.append(article)
 
     return unique_articles
+"""
+"""
+async def fetch_risk_news_for_region(region: str) -> list[dict]:
+    """
+"""
+    Temporary Mock News to bypass NewsAPI Rate Limits.
+    Returns data in the exact format your agent expects.
+    """
+"""
+    print(f"🏗️ Using MOCK news for region: {region}")
+    
+    # These mock articles are designed to look like real logistics risks
+    mock_database = [
+        {
+            "title": f"Major Port Strike in {region} threatens supply chains",
+            "description": "Port workers have announced a 48-hour walkout starting tomorrow, halting all container traffic.",
+            "url": "https://example.com/news/1",
+            "source": "Logistics Insider"
+        },
+        {
+            "title": f"Severe flooding reported near {region} highways",
+            "description": "Record-breaking rainfall has caused multiple road closures on major transit routes.",
+            "url": "https://example.com/news/2",
+            "source": "Weather Daily"
+        },
+        {
+            "title": "Global Shipping Rates Spike",
+            "description": "General news about shipping costs that shouldn't necessarily trigger a high-severity alert.",
+            "url": "https://example.com/news/3",
+            "source": "Business Weekly"
+        }
+    ]
+    
+    # Return the list to keep the async gather working
+    return mock_database
 
+
+
+async def fetch_risk_news_for_region(region: str) -> list[dict]:
+    articles = []
+    with DDGS() as ddgs:
+        # 'news' is a specific method in the DDGS library
+        results = ddgs.news(f"{region} logistics shipping risk", max_results=5)
+        for r in results:
+            articles.append({
+                "title": r['title'],
+                "description": r['body'],
+                "url": r['url'],
+                "source": r['source']
+            })
+    return articles
+"""
+
+
+logger = logging.getLogger(__name__)
+
+async def fetch_risk_news_for_region(region: str) -> list[dict]:
+    """
+    Fetches news using Google News RSS. 
+    Highly stable, free, and bypasses most 'DecodeError' or 'RateLimit' issues.
+    """
+    articles = []
+    try:
+        # 1. Clean and encode the query
+        query = urllib.parse.quote(f"{region} logistics shipping risk")
+        # ceid=US:en tells Google to give us US/English results
+        rss_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+        
+        # 2. Parse the RSS feed (This is a lightweight XML fetch)
+        feed = feedparser.parse(rss_url)
+        
+        for entry in feed.entries[:5]: # Take top 5
+            articles.append({
+                "title": entry.get('title', 'No Title'),
+                "description": entry.get('summary', 'No description'),
+                "url": entry.get('link', '#'),
+                "source": entry.get('source', {}).get('title', 'Google News')
+            })
+            
+    except Exception as e:
+        logger.error(f"⚠️ Google RSS Fetch failed for {region}: {e}")
+        return [] # Return empty list so the Agent doesn't crash
+
+    return articles
 # ---- Manual test, run this file directly to explore the data ----
 if __name__ == "__main__":
     async def run_tests():

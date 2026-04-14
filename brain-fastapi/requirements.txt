@@ -1,3 +1,10 @@
 fastapi
 uvicorn[standard]
 groq
+langgraph
+langchain-groq
+langchain-core
+pydantic
+python-dotenv
+feedparser
+math
