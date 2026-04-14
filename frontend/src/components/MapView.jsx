@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { analyzeRisk } from "../services/api.js";
@@ -32,15 +32,18 @@ const redIcon = new L.DivIcon({
 
 function MapView({ shipments }) {
   const [riskResults, setRiskResults] = useState({});
+  const attemptedShipments = useRef(new Set());
 
   useEffect(() => {
     const checkInitialRisks = async () => {
       const newResults = { ...riskResults };
 
       for (const shipment of shipments) {
-        if (newResults[shipment.shipment_id]) {
+        if (attemptedShipments.current.has(shipment.shipment_id)) {
           continue;
         }
+
+        attemptedShipments.current.add(shipment.shipment_id);
 
         try {
           const response = await analyzeRisk(shipment);
