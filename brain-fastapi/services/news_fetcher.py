@@ -2,7 +2,6 @@ import httpx
 import os
 import asyncio # New import for concurrency if needed
 from dotenv import load_dotenv
-from ddgs import DDGS
 load_dotenv()
 import feedparser
 import urllib.parse

@@ -7,4 +7,3 @@ langchain-core
 pydantic
 python-dotenv
 feedparser
-math
