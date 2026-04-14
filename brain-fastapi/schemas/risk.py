@@ -23,5 +23,7 @@ class RiskDetails(BaseModel):
 # 4. AnalyzeRiskResponse (risk_detected, risk_details)
 class AnalyzeRiskResponse(BaseModel):
     risk_detected: bool
-    # Using Optional here since risk_details might be null/absent if risk_detected is False
+    is_in_risk_zone: bool
+    distance_to_risk_km: Optional[float] = None
+    risk_radius_km: Optional[float] = None
     risk_details: Optional[RiskDetails] = None

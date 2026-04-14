@@ -8,6 +8,12 @@ NEVER commit actual API keys or database passwords.
 .env.production
 *.env
 
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 (Optional: allow a template file so your friend knows what keys are needed)
 !.env.example
 
