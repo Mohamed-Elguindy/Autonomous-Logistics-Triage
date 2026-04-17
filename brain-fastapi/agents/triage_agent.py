@@ -4,11 +4,16 @@ from typing import Literal
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, START, END
+from langfuse.langchain import CallbackHandler
 from schemas.triage import AgentState, TriageResponse, RecommendedAction
 from services.triage_calculator import calculate_detour_cost, calculate_new_eta
 from agents.tools import calculate_truck_route
 from dotenv import load_dotenv
+
 load_dotenv()
+
+# Initialize Langfuse Callback Handler
+langfuse_handler = CallbackHandler()
 
 # Initialize the blazing fast Groq LLM
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
@@ -60,7 +65,7 @@ def generate_options_node(state: AgentState):
     except json.JSONDecodeError:
         drafts = [] # Will be caught by the judge
         
-    return {"draft_options": drafts}
+    return {"draft_options": drafts, "retry_count": state.get("retry_count", 0) + 1} # <-- Make sure to increment retries!
 
 # ==========================================
 # NODE: Fallback Strategy (Circuit Breaker)
@@ -131,17 +136,14 @@ def speed_judge(state: AgentState) -> Literal["format_node", "generate_options_n
 # ==========================================
 builder = StateGraph(AgentState)
 
-# Add Nodes
 builder.add_node("prepare_context_node", prepare_context_node)
 builder.add_node("generate_options_node", generate_options_node)
 builder.add_node("fallback_node", fallback_node)
 builder.add_node("format_node", format_node)
 
-# Add Edges (The Flow)
 builder.add_edge(START, "prepare_context_node")
 builder.add_edge("prepare_context_node", "generate_options_node")
 
-# Add Conditional Logic
 builder.add_conditional_edges(
     "generate_options_node",
     speed_judge,
@@ -157,3 +159,22 @@ builder.add_edge("format_node", END)
 
 # Compile into a callable application
 triage_agent = builder.compile()
+
+# ==========================================
+# INVOCATION EXAMPLE WITH LANGFUSE
+# ==========================================
+if __name__ == "__main__":
+    # Mock input state
+    # initial_state = {"request": mock_request_object} 
+    
+    # Run the graph and pass the Langfuse handler in the config
+    # result = triage_agent.invoke(
+    #     initial_state,
+    #     config={
+    #         "callbacks": [langfuse_handler],
+    #         "run_name": "Logistics_Triage_Agent" # <-- Option 1: Explicitly names this agent's trace
+    #     }
+    # )
+    
+    # Flush Langfuse to ensure all events are sent before the script exits
+    langfuse_handler.flush()
