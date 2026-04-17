@@ -48,3 +48,34 @@ export const analyzeRisk = async (req, res) => {
     }
   }
 };
+
+export const generateTriage = async (req, res) => {
+  try {
+    const shipmentData = req.body;
+
+    const response = await axios.post(
+      "http://brain-api:8000/api/v1/generate-triage",
+      shipmentData,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: response.data,
+    });
+  } catch (error) {
+    console.error("Error generating triage:", error.message);
+
+    if (error.response) {
+      res.status(error.response.status).json({
+        success: false,
+        message: "FastAPI returned an error",
+        error: error.response.data,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: "Failed to connect to triage service",
+      });
+    }
+  }
+};

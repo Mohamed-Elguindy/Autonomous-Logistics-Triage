@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { analyzeRisk } from "../services/api.js";
 import "leaflet/dist/leaflet.css";
 
 const greenIcon = new L.Icon({
@@ -30,40 +28,10 @@ const redIcon = new L.DivIcon({
   popupAnchor: [1, -34],
 });
 
-function MapView({ shipments }) {
-  const [riskResults, setRiskResults] = useState({});
-  const attemptedShipments = useRef(new Set());
-
-  useEffect(() => {
-    const checkInitialRisks = async () => {
-      const newResults = { ...riskResults };
-
-      for (const shipment of shipments) {
-        if (attemptedShipments.current.has(shipment.shipment_id)) {
-          continue;
-        }
-
-        attemptedShipments.current.add(shipment.shipment_id);
-
-        try {
-          const response = await analyzeRisk(shipment);
-          newResults[shipment.shipment_id] = response.data;
-        } catch (error) {
-          console.error(`Risk check failed for ${shipment.shipment_id}`, error);
-        }
-      }
-
-      setRiskResults(newResults);
-    };
-
-    if (shipments.length > 0) {
-      checkInitialRisks();
-    }
-  }, [shipments.length]);
-
+function MapView({ shipments, riskyShipments, onRiskyShipmentClick }) {
   const getMarkerIcon = (shipment) => {
-    const risk = riskResults[shipment.shipment_id];
-    return risk?.is_in_risk_zone === true ? redIcon : greenIcon;
+    const risk = riskyShipments?.[shipment.shipment_id];
+    return risk?.risk_detected ? redIcon : greenIcon;
   };
 
   return (
@@ -74,7 +42,7 @@ function MapView({ shipments }) {
       />
 
       {shipments.map((shipment) => {
-        const risk = riskResults[shipment.shipment_id];
+        const risk = riskyShipments?.[shipment.shipment_id];
 
         return (
           <Marker
@@ -84,19 +52,30 @@ function MapView({ shipments }) {
               Number(shipment.current_lng),
             ]}
             icon={getMarkerIcon(shipment)}
+            eventHandlers={{
+              click: () => {
+                if (risk?.risk_detected && onRiskyShipmentClick) {
+                  onRiskyShipmentClick(shipment);
+                }
+              },
+            }}
           >
             <Popup>
               <div>
                 <h3>{shipment.shipment_id}</h3>
+
                 <p>
                   <strong>Origin:</strong> {shipment.origin}
                 </p>
+
                 <p>
                   <strong>Destination:</strong> {shipment.destination}
                 </p>
+
                 <p>
                   <strong>Status:</strong> {shipment.status}
                 </p>
+
                 <p>
                   <strong>Cargo:</strong> {shipment.cargo_type}
                 </p>

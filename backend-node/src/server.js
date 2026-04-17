@@ -5,6 +5,10 @@ import app from "./app.js";
 import db from "./config/db.js";
 import { setIO } from "./config/socket.js";
 import { startShipmentSimulation } from "./services/shipmentSimulation.js";
+import {
+  startRiskMonitoring,
+  getShipmentRiskCache,
+} from "./services/riskMonitorService.js";
 
 dotenv.config();
 
@@ -24,6 +28,17 @@ setIO(io);
 io.on("connection", (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
+  const riskCache = getShipmentRiskCache();
+
+  for (const [shipmentId, riskData] of riskCache.entries()) {
+    if (riskData.risk_detected) {
+      socket.emit("shipment-risk-detected", {
+        shipment_id: shipmentId,
+        risk: riskData,
+      });
+    }
+  }
+
   socket.on("disconnect", () => {
     console.log(`Client disconnected: ${socket.id}`);
   });
@@ -34,6 +49,7 @@ db.connect()
     console.log("Connected to PostgreSQL");
 
     startShipmentSimulation();
+    startRiskMonitoring();
 
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
