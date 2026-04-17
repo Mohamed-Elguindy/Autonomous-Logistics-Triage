@@ -1,52 +1,55 @@
 import asyncio
 import math
-from typing import TypedDict, Optional, Annotated
+import os
+from typing import TypedDict, Optional
+
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END
+from langfuse.langchain import CallbackHandler
 
-# Import your official schemas
 from schemas.risk import AnalyzeRiskResponse, RiskDetails
 from services.news_fetcher import fetch_risk_news_for_region
 from services.weather_fetcher import fetch_weather_for_route
 
 # ─────────────────────────────────────────────
-# 1. STATE DEFINITION
+# LANGFUSE HANDLER
+# ─────────────────────────────────────────────
+
+langfuse_handler = CallbackHandler()
+
+
+# ─────────────────────────────────────────────
+# STATE
 # ─────────────────────────────────────────────
 
 class MonitoringState(TypedDict):
-    # Input Data
     shipment_id: str
     current_location: dict
     destination: dict
     cargo_type: str
 
-    # Node 1 Output
     weather_data: Optional[dict]
     news_articles: Optional[list[dict]]
 
-    # Node 2 Output (Internal logic)
     risk_detected: Optional[bool]
-    risk_details: Optional[dict]  # Will hold 'type', 'description', 'severity', 'source'
+    risk_details: Optional[dict]
     risk_radius_km: Optional[float]
 
-    # Node 3 Output
     distance_to_risk_km: Optional[float]
     is_in_risk_zone: Optional[bool]
     final_response: Optional[AnalyzeRiskResponse]
 
-    # Error tracking
     error: Optional[str]
 
 
 # ─────────────────────────────────────────────
-# 2. INTERNAL SCHEMAS & LLM SETUP
+# LLM SETUP
 # ─────────────────────────────────────────────
 
 class LLMRiskAnalysis(BaseModel):
-    """Schema for structured LLM output in Node 2."""
     risk_detected: bool = Field(description="True if weather or news poses a logistics risk.")
     type: str = Field(description="Type of risk (e.g., Heavy Rain, Strike).", default="")
     description: str = Field(description="Detailed explanation of the risk.", default="")
@@ -54,18 +57,17 @@ class LLMRiskAnalysis(BaseModel):
     source: str = Field(description="The data source (e.g., 'Weather API', 'News').", default="")
     risk_radius_km: float = Field(description="Radius of the risk zone in km.", default=0.0)
 
-# Initialize Groq with structured output
-llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
 structured_llm = llm.with_structured_output(LLMRiskAnalysis)
 
 
 # ─────────────────────────────────────────────
-# 3. HELPER FUNCTIONS
+# HELPER
 # ─────────────────────────────────────────────
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Haversine formula to calculate distance between two points on Earth."""
-    R = 6371.0  # Earth radius in km
+    R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * \
@@ -75,7 +77,7 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 
 # ─────────────────────────────────────────────
-# 4. NODES
+# NODES
 # ─────────────────────────────────────────────
 
 async def fetch_data_node(state: MonitoringState) -> MonitoringState:
@@ -83,23 +85,19 @@ async def fetch_data_node(state: MonitoringState) -> MonitoringState:
         current = state["current_location"]
         destination = state["destination"]
 
-        # Fetch Weather
         weather_data = await fetch_weather_for_route(
             origin={"lat": current["lat"], "lng": current["lng"]},
             destination={"lat": destination["lat"], "lng": destination["lng"]}
         )
 
-        # Extract Cities
         origin_city = weather_data.get("origin", {}).get("city", "global shipping")
         dest_city = weather_data.get("destination", {}).get("city", "global shipping")
 
-        # Fetch News simultaneously
         news_results = await asyncio.gather(
             fetch_risk_news_for_region(origin_city),
             fetch_risk_news_for_region(dest_city)
         )
 
-        # Merge and Deduplicate News
         all_news = news_results[0] + news_results[1]
         seen_titles = set()
         deduped_news = []
@@ -114,6 +112,7 @@ async def fetch_data_node(state: MonitoringState) -> MonitoringState:
             "news_articles": deduped_news,
             "error": None
         }
+
     except Exception as e:
         return {**state, "error": f"Node 1 (Fetch) failed: {str(e)}"}
 
@@ -123,12 +122,14 @@ async def analyze_risk_node(state: MonitoringState) -> MonitoringState:
         return state
 
     try:
-        # 1. More descriptive instructions
         system_msg = (
-            "You are a strict logistics risk analyst. Your ONLY job is to fill the provided "
-            "LLMRiskAnalysis schema based on weather and news. "
-            "CRITICAL: Do not invent new fields. Use ONLY the fields defined in the schema: "
-            "risk_detected, type, description, severity, source, and risk_radius_km."
+            "You are a strict logistics risk analyst. Your job is to fill the provided "
+            "LLMRiskAnalysis schema based on the provided weather and news data. "
+            "CRITICAL OVERRIDE: Even if the provided news is empty, you MUST evaluate the "
+            "shipment's coordinates against your internal knowledge of global chokepoints, "
+            "active war zones (e.g., Red Sea, Black Sea), and piracy threats. If the route or "
+            "coordinates intersect a known geopolitical danger zone, you must flag a risk. "
+            "Do not invent new fields. Use ONLY the fields defined in the schema."
         )
 
         human_msg = (
@@ -144,7 +145,8 @@ async def analyze_risk_node(state: MonitoringState) -> MonitoringState:
         ])
 
         chain = prompt | structured_llm
-        
+
+        # No callback here — handler is passed at graph level
         response: LLMRiskAnalysis = await chain.ainvoke({
             "cargo": state["cargo_type"],
             "weather": state.get("weather_data"),
@@ -167,9 +169,8 @@ async def analyze_risk_node(state: MonitoringState) -> MonitoringState:
     except Exception as e:
         return {**state, "error": f"Node 2 (Analyze) failed: {str(e)}"}
 
-async def validate_and_format_node(state: MonitoringState) -> MonitoringState:
 
-    # If Node 1 or 2 errored, or no risk was found, return a clean 'False' response
+async def validate_and_format_node(state: MonitoringState) -> MonitoringState:
     if state.get("error") or not state.get("risk_detected"):
         return {
             **state,
@@ -180,15 +181,13 @@ async def validate_and_format_node(state: MonitoringState) -> MonitoringState:
         }
 
     try:
-        # Calculate Distance to the risk (assumed at destination for this logic)
         dist = calculate_distance(
             state["current_location"]["lat"], state["current_location"]["lng"],
             state["destination"]["lat"], state["destination"]["lng"]
         )
 
         radius = state.get("risk_radius_km", 0.0)
-        
-        # Build official RiskDetails object
+
         details = RiskDetails(
             type=state["risk_details"]["type"],
             description=state["risk_details"]["description"],
@@ -196,7 +195,6 @@ async def validate_and_format_node(state: MonitoringState) -> MonitoringState:
             source=state["risk_details"]["source"]
         )
 
-        # Build official Response object
         final_resp = AnalyzeRiskResponse(
             risk_detected=True,
             is_in_risk_zone=dist <= radius,
@@ -204,19 +202,20 @@ async def validate_and_format_node(state: MonitoringState) -> MonitoringState:
             risk_radius_km=radius,
             risk_details=details
         )
+
         return {
             **state,
             "distance_to_risk_km": round(dist, 2),
             "is_in_risk_zone": dist <= radius,
             "final_response": final_resp
         }
-    
+
     except Exception as e:
         return {**state, "error": f"Node 3 (Format) failed: {str(e)}"}
 
 
 # ─────────────────────────────────────────────
-# 5. GRAPH CONSTRUCTION
+# GRAPH
 # ─────────────────────────────────────────────
 
 workflow = StateGraph(MonitoringState)

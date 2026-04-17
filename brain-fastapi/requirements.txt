@@ -2,8 +2,11 @@ fastapi
 uvicorn[standard]
 groq
 langgraph
+langchain
 langchain-groq
 langchain-core
 pydantic
 python-dotenv
 feedparser
+httpx
+langfuse

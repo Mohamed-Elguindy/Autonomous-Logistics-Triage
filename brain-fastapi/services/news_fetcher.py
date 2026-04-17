@@ -130,34 +130,97 @@ async def fetch_risk_news_for_region(region: str) -> list[dict]:
 
 logger = logging.getLogger(__name__)
 
+# =====================================================================
+# OLD GOOGLE RSS IMPLEMENTATION (COMMENTED OUT)
+# =====================================================================
+# async def fetch_risk_news_for_region(region: str) -> list[dict]:
+#     """
+#     Fetches news using Google News RSS. 
+#     Highly stable, free, and bypasses most 'DecodeError' or 'RateLimit' issues.
+#     """
+#     articles = []
+#     try:
+#         # 1. Clean and encode the query
+#         query = urllib.parse.quote(f"{region} logistics shipping risk")
+#         # ceid=US:en tells Google to give us US/English results
+#         rss_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+#         
+#         # 2. Parse the RSS feed (This is a lightweight XML fetch)
+#         feed = feedparser.parse(rss_url)
+#         
+#         for entry in feed.entries[:5]: # Take top 5
+#             articles.append({
+#                 "title": entry.get('title', 'No Title'),
+#                 "description": entry.get('summary', 'No description'),
+#                 "url": entry.get('link', '#'),
+#                 "source": entry.get('source', {}).get('title', 'Google News')
+#             })
+#             
+#     except Exception as e:
+#         logger.error(f"⚠️ Google RSS Fetch failed for {region}: {e}")
+#         return [] # Return empty list so the Agent doesn't crash
+# 
+#     return articles
+
+
+# =====================================================================
+# NEW TAVILY IMPLEMENTATION
+# =====================================================================
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
 async def fetch_risk_news_for_region(region: str) -> list[dict]:
     """
-    Fetches news using Google News RSS. 
-    Highly stable, free, and bypasses most 'DecodeError' or 'RateLimit' issues.
+    Fetches real-time logistics and shipping risk news using the Tavily API.
+    Specifically uses the 'news' topic to ensure high-quality recent events.
     """
+    if not TAVILY_API_KEY:
+        logger.error("⚠️ TAVILY_API_KEY is missing from environment variables.")
+        return []
+
     articles = []
+    query = f"latest shipping logistics supply chain risks, port strikes, or natural disasters in {region}"
+    
+    payload = {
+        "api_key": TAVILY_API_KEY,
+        "query": query,
+        "search_depth": "advanced", 
+        "topic": "news",            
+        "days": 7,                  
+        "max_results": 5,
+        "include_raw_content": False
+    }
+
     try:
-        # 1. Clean and encode the query
-        query = urllib.parse.quote(f"{region} logistics shipping risk")
-        # ceid=US:en tells Google to give us US/English results
-        rss_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
-        
-        # 2. Parse the RSS feed (This is a lightweight XML fetch)
-        feed = feedparser.parse(rss_url)
-        
-        for entry in feed.entries[:5]: # Take top 5
-            articles.append({
-                "title": entry.get('title', 'No Title'),
-                "description": entry.get('summary', 'No description'),
-                "url": entry.get('link', '#'),
-                "source": entry.get('source', {}).get('title', 'Google News')
-            })
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post("https://api.tavily.com/search", json=payload)
+            response.raise_for_status() 
+            data = response.json()
             
+            results = data.get("results", [])
+            
+            if not results:
+                logger.warning(f"⚠️ Tavily returned 0 news articles for region: {region}")
+                return []
+
+            for r in results:
+                # Extract the domain name to use as the "source"
+                raw_url = r.get('url', '')
+                source_domain = raw_url.split('/')[2] if '//' in raw_url else 'Tavily Search'
+
+                articles.append({
+                    "title": r.get('title', 'No Title'),
+                    "description": r.get('content', 'No description'), 
+                    "url": raw_url,
+                    "source": source_domain
+                })
+                
+    except httpx.HTTPStatusError as e:
+        logger.error(f"❌ [ERROR] Tavily API HTTP Error for {region}: Status {e.response.status_code} | {e.response.text}")
     except Exception as e:
-        logger.error(f"⚠️ Google RSS Fetch failed for {region}: {e}")
-        return [] # Return empty list so the Agent doesn't crash
+        logger.error(f"❌ [ERROR] Tavily fetch failed for {region}: {e}")
 
     return articles
+
 # ---- Manual test, run this file directly to explore the data ----
 if __name__ == "__main__":
     async def run_tests():
@@ -185,4 +248,4 @@ if __name__ == "__main__":
             print(f"Title:       {a['title']}")
             print(f"Description: {a['description']}")
 
-    asyncio.run(run_tests())  
+    asyncio.run(run_tests())
