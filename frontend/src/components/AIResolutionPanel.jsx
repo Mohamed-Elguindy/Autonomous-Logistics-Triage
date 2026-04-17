@@ -1,93 +1,126 @@
-function AIResolutionPanel({ isOpen, shipment, triageResult, loading }) {
+function AIResolutionPanel({ isOpen, shipment, triageResult, loading, risk }) {
   if (!isOpen) return null;
 
   const actions = triageResult?.recommended_actions;
   const hasRecommendedActions = Array.isArray(actions) && actions.length > 0;
 
   return (
-    <div className="ai-panel">
-      <h2 className="ai-panel-title">AI Resolution</h2>
+    <aside className="main-card ai-panel">
+      <div className="card-header">
+        <div>
+          <h2>AI Resolution</h2>
+          <p>Suggested mitigation strategies and route alternatives</p>
+        </div>
+      </div>
 
       <div className="ai-panel-content">
         {loading ? (
-          <p>Generating AI resolution...</p>
+          <p className="info-text">Generating AI resolution...</p>
         ) : !shipment ? (
-          <p>Select a risky shipment to view AI recommendations.</p>
+          <div className="empty-state">
+            <h3>No shipment selected</h3>
+            <p>Select a risky shipment marker to view AI recommendations.</p>
+          </div>
         ) : (
           <>
-            <p>
-              <strong>Shipment ID:</strong> {shipment.shipment_id}
-            </p>
-            <p>
-              <strong>Origin:</strong> {shipment.origin}
-            </p>
-            <p>
-              <strong>Destination:</strong> {shipment.destination}
-            </p>
-            <p>
-              <strong>Cargo Type:</strong> {shipment.cargo_type}
-            </p>
+            <div className="info-section">
+              <h3>Shipment Overview</h3>
+              <div className="info-grid">
+                <div>
+                  <span>ID</span>
+                  <strong>{shipment.shipment_id}</strong>
+                </div>
+                <div>
+                  <span>Origin</span>
+                  <strong>{shipment.origin}</strong>
+                </div>
+                <div>
+                  <span>Destination</span>
+                  <strong>{shipment.destination}</strong>
+                </div>
+                <div>
+                  <span>Cargo</span>
+                  <strong>{shipment.cargo_type}</strong>
+                </div>
+              </div>
+            </div>
 
-            <hr />
+            {risk && (
+              <div className="info-section">
+                <h3>Risk Summary</h3>
+                <div className="info-grid">
+                  <div>
+                    <span>Status</span>
+                    <strong>{risk.risk_detected ? "Detected" : "Clear"}</strong>
+                  </div>
+                  <div>
+                    <span>Type</span>
+                    <strong>{risk.risk_details?.type ?? "N/A"}</strong>
+                  </div>
+                  <div>
+                    <span>Severity</span>
+                    <strong>{risk.risk_details?.severity ?? "N/A"}</strong>
+                  </div>
+                  <div>
+                    <span>Source</span>
+                    <strong>{risk.risk_details?.source ?? "N/A"}</strong>
+                  </div>
+                </div>
+                {risk.risk_details?.description && (
+                  <p className="risk-description">
+                    {risk.risk_details.description}
+                  </p>
+                )}
+              </div>
+            )}
 
             {hasRecommendedActions ? (
-              actions.map((option) => (
-                <div
-                  key={option.option_id || option.strategy}
-                  style={{ marginBottom: "16px" }}
-                >
-                  <p>
-                    <strong>Strategy:</strong> {option.strategy ?? "N/A"}
-                  </p>
-                  <p>
-                    <strong>New ETA:</strong> {option.new_eta ?? "N/A"}
-                  </p>
-                  <p>
-                    <strong>Additional Cost:</strong>{" "}
-                    {option.additional_cost_usd != null
-                      ? `$${option.additional_cost_usd}`
-                      : "N/A"}
-                  </p>
-                  <p>
-                    <strong>AI Confidence:</strong>{" "}
-                    {option.ai_confidence_score ?? "N/A"}
-                  </p>
-                  <p>
-                    <strong>Reasoning:</strong> {option.reasoning ?? "N/A"}
-                  </p>
-                  <hr />
-                </div>
-              ))
-            ) : triageResult?.summary ? (
-              <>
-                <p>
-                  <strong>Summary:</strong> {triageResult.summary}
-                </p>
-                <p>
-                  <strong>Recommended Action:</strong>{" "}
-                  {triageResult.recommended_action ?? "N/A"}
-                </p>
-                <p>
-                  <strong>Alternative Route:</strong>{" "}
-                  {triageResult.alternative_route ?? "N/A"}
-                </p>
-                <p>
-                  <strong>Estimated Delay:</strong>{" "}
-                  {triageResult.estimated_delay ?? "N/A"}
-                </p>
-                <p>
-                  <strong>Priority:</strong> {triageResult.priority ?? "N/A"}
-                </p>
-              </>
+              <div className="actions-list">
+                {actions.map((option) => (
+                  <div
+                    className="action-card"
+                    key={option.option_id || option.strategy}
+                  >
+                    <div className="action-card-header">
+                      <h3>{option.strategy ?? "Recommended Strategy"}</h3>
+                      <span className="confidence-badge">
+                        Confidence {option.ai_confidence_score ?? "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="info-grid">
+                      <div>
+                        <span>New ETA</span>
+                        <strong>{option.new_eta ?? "N/A"}</strong>
+                      </div>
+                      <div>
+                        <span>Added Cost</span>
+                        <strong>
+                          {option.additional_cost_usd != null
+                            ? `$${option.additional_cost_usd}`
+                            : "N/A"}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <p className="reasoning-text">
+                      {option.reasoning ?? "No reasoning provided."}
+                    </p>
+                  </div>
+                ))}
+              </div>
             ) : triageResult?.message ? (
-              <p>{triageResult.message}</p>
+              <p className="info-text">{triageResult.message}</p>
             ) : (
-              <p>No AI resolution available yet.</p>
+              <div className="empty-state">
+                <h3>No AI resolution available</h3>
+                <p>No recommendation data has been returned yet.</p>
+              </div>
             )}
           </>
         )}
       </div>
-    </div>
+    </aside>
   );
 }
 
