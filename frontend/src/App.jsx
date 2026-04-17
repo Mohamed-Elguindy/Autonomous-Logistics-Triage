@@ -8,7 +8,7 @@ function App() {
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [riskyShipments, setRiskyShipments] = useState({});
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [triageResult, setTriageResult] = useState(null);
@@ -40,8 +40,6 @@ function App() {
     });
 
     socket.on("shipmentUpdated", (updatedShipment) => {
-      console.log("Updated shipment received:", updatedShipment);
-
       setShipments((prevShipments) =>
         prevShipments.map((shipment) =>
           shipment.shipment_id === updatedShipment.shipment_id
@@ -52,8 +50,6 @@ function App() {
     });
 
     socket.on("shipment-risk-detected", (data) => {
-      console.log("Risk event received:", data);
-
       setRiskyShipments((prev) => ({
         ...prev,
         [data.shipment_id]: data.risk,
@@ -70,7 +66,6 @@ function App() {
 
   const handleRiskyShipmentClick = async (shipment) => {
     const risk = riskyShipments[shipment.shipment_id];
-
     if (!risk?.risk_detected) return;
 
     try {
@@ -84,8 +79,7 @@ function App() {
     } catch (err) {
       console.error("Failed to generate triage:", err);
       setTriageResult({
-        error: true,
-        message: "Failed to generate AI resolution.",
+        message: "Could not generate an AI resolution right now.",
       });
     } finally {
       setTriageLoading(false);
@@ -93,37 +87,66 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <div className="dashboard-header">
-        <h1 className="app-title">Logistics Dashboard</h1>
+    <div className="app-shell">
+      <header className="topbar">
+        <div>
+          <h1 className="brand-title">Autonomous Logistics Triage</h1>
+          <p className="brand-subtitle">
+            Real-time shipment monitoring, risk detection, and AI mitigation
+          </p>
+        </div>
 
-        <button
-          className="ai-panel-toggle"
-          onClick={() => setIsPanelOpen((prev) => !prev)}
-        >
-          {isPanelOpen ? "Hide AI Panel" : "Show AI Panel"}
-        </button>
-      </div>
+        <div className="topbar-actions">
+          <div className="status-chip">
+            <span className="status-dot" />
+            Live Monitoring
+          </div>
 
-      {loading && <p>Loading shipments...</p>}
-      {error && <p>{error}</p>}
+          <button
+            className="ai-panel-toggle"
+            onClick={() => setIsPanelOpen((prev) => !prev)}
+          >
+            {isPanelOpen ? "Hide AI Panel" : "Show AI Panel"}
+          </button>
+        </div>
+      </header>
 
-      {!loading && !error && (
-        <div className="dashboard-layout">
-          <MapView
-            shipments={shipments}
-            riskyShipments={riskyShipments}
-            onRiskyShipmentClick={handleRiskyShipmentClick}
-          />
+      <main className="dashboard-container">
+        <section className="dashboard-grid">
+          <div className="main-card map-card">
+            <div className="card-header">
+              <div>
+                <h2>Live Shipment Tracking</h2>
+                <p>Monitor route progress and active risk alerts</p>
+              </div>
+              <div className="mini-badge">{shipments.length} shipment(s)</div>
+            </div>
+
+            {loading && <p className="info-text">Loading shipments...</p>}
+            {error && <p className="error-text">{error}</p>}
+
+            {!loading && !error && (
+              <MapView
+                shipments={shipments}
+                riskyShipments={riskyShipments}
+                onRiskyShipmentClick={handleRiskyShipmentClick}
+              />
+            )}
+          </div>
 
           <AIResolutionPanel
             isOpen={isPanelOpen}
             shipment={selectedShipment}
             triageResult={triageResult}
             loading={triageLoading}
+            risk={
+              selectedShipment
+                ? riskyShipments[selectedShipment.shipment_id]
+                : null
+            }
           />
-        </div>
-      )}
+        </section>
+      </main>
     </div>
   );
 }
