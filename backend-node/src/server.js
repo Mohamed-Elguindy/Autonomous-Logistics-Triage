@@ -49,7 +49,10 @@ db.connect()
     console.log("Connected to PostgreSQL");
 
     startShipmentSimulation();
-    startRiskMonitoring();
+    setTimeout(() => {
+      console.log("Starting risk monitoring after 15 seconds...");
+      startRiskMonitoring();
+    }, 15000);
 
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
