@@ -52,7 +52,7 @@ db.connect()
     setTimeout(() => {
       console.log("Starting risk monitoring after 15 seconds...");
       startRiskMonitoring();
-    }, 15000);
+    }, 10000);
 
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
