@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import health
+from routers import triage
 from routers import risk
 from dotenv import load_dotenv
 import os
@@ -8,11 +9,14 @@ import os
 load_dotenv() # This loads the variables from .env into the environment
 # Placeholder for your router imports
 # from routers import my_router 
+if not os.getenv("GROQ_API_KEY"):
+    print("WARNING: GROQ_API_KEY is still not loaded!")
 
 # 1. Create the FastAPI app instance
 app = FastAPI(title="Logistics AI API")
 app.include_router(health.router)  
 app.include_router(risk.router)
+app.include_router(triage.router)
 
 # 2. Add CORS middleware (allowing all origins for development)
 app.add_middleware(
