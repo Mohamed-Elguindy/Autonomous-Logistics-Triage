@@ -4,6 +4,8 @@ from agents.triage_agent import triage_agent # Or graph.py if you didn't rename 
 
 router = APIRouter()
 
+router = APIRouter(prefix="/api/v1")
+
 @router.post("/generate-triage", response_model=TriageResponse)
 async def generate_triage(request: TriageRequest):
     """
