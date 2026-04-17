@@ -35,10 +35,21 @@ function MapView({ shipments, riskyShipments, onRiskyShipmentClick }) {
   };
 
   return (
-    <MapContainer center={[20, 20]} zoom={2} className="leaflet-map">
+    <MapContainer
+      center={[20, 20]}
+      zoom={3}
+      minZoom={3}
+      maxBounds={[
+        [-90, -180],
+        [90, 180],
+      ]}
+      maxBoundsViscosity={1.0}
+      className="leaflet-map"
+    >
       <TileLayer
         attribution="&copy; OpenStreetMap contributors"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        noWrap={true}
       />
 
       {shipments.map((shipment) => {
@@ -60,8 +71,8 @@ function MapView({ shipments, riskyShipments, onRiskyShipmentClick }) {
               },
             }}
           >
-            <Popup>
-              <div>
+            <Popup maxWidth={300}>
+              <div style={{ maxHeight: "220px", overflowY: "auto" }}>
                 <h3>{shipment.shipment_id}</h3>
 
                 <p>

@@ -79,10 +79,8 @@ function AIResolutionPanel({ isOpen, shipment, triageResult, loading }) {
                   <strong>Priority:</strong> {triageResult.priority ?? "N/A"}
                 </p>
               </>
-            ) : triageResult ? (
-              <pre style={{ whiteSpace: "pre-wrap" }}>
-                {JSON.stringify(triageResult, null, 2)}
-              </pre>
+            ) : triageResult?.message ? (
+              <p>{triageResult.message}</p>
             ) : (
               <p>No AI resolution available yet.</p>
             )}
