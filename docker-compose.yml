@@ -1,14 +1,15 @@
 services:
   # 1. The Python AI Agent
+# 1. The Python AI Agent
   brain-api:
     build: ./brain-fastapi
     ports:
       - "8000:8000"
     volumes:
       - ./brain-fastapi:/app
-    environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - WEATHER_API_KEY=${WEATHER_API_KEY}
+    # REMOVE the environment block and replace it with env_file
+    env_file:
+      - ./brain-fastapi/.env  # Point this to wherever your working .env file lives
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - supply-chain-network
