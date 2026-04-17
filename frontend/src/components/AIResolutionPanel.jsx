@@ -27,19 +27,19 @@ function AIResolutionPanel({ isOpen, shipment, triageResult, loading, risk }) {
               <h3>Shipment Overview</h3>
               <div className="info-grid">
                 <div>
-                  <span>ID</span>
+                  <span>ID: </span>
                   <strong>{shipment.shipment_id}</strong>
                 </div>
                 <div>
-                  <span>Origin</span>
+                  <span>Origin: </span>
                   <strong>{shipment.origin}</strong>
                 </div>
                 <div>
-                  <span>Destination</span>
+                  <span>Destination: </span>
                   <strong>{shipment.destination}</strong>
                 </div>
                 <div>
-                  <span>Cargo</span>
+                  <span>Cargo: </span>
                   <strong>{shipment.cargo_type}</strong>
                 </div>
               </div>
@@ -50,22 +50,23 @@ function AIResolutionPanel({ isOpen, shipment, triageResult, loading, risk }) {
                 <h3>Risk Summary</h3>
                 <div className="info-grid">
                   <div>
-                    <span>Status</span>
+                    <span>Status: </span>
                     <strong>{risk.risk_detected ? "Detected" : "Clear"}</strong>
                   </div>
                   <div>
-                    <span>Type</span>
+                    <span>Type: </span>
                     <strong>{risk.risk_details?.type ?? "N/A"}</strong>
                   </div>
                   <div>
-                    <span>Severity</span>
+                    <span>Severity: </span>
                     <strong>{risk.risk_details?.severity ?? "N/A"}</strong>
                   </div>
                   <div>
-                    <span>Source</span>
+                    <span>Source: </span>
                     <strong>{risk.risk_details?.source ?? "N/A"}</strong>
                   </div>
                 </div>
+
                 {risk.risk_details?.description && (
                   <p className="risk-description">
                     {risk.risk_details.description}
@@ -84,17 +85,17 @@ function AIResolutionPanel({ isOpen, shipment, triageResult, loading, risk }) {
                     <div className="action-card-header">
                       <h3>{option.strategy ?? "Recommended Strategy"}</h3>
                       <span className="confidence-badge">
-                        Confidence {option.ai_confidence_score ?? "N/A"}
+                        Confidence: {option.ai_confidence_score ?? "N/A"}
                       </span>
                     </div>
 
                     <div className="info-grid">
                       <div>
-                        <span>New ETA</span>
+                        <span>New ETA: </span>
                         <strong>{option.new_eta ?? "N/A"}</strong>
                       </div>
                       <div>
-                        <span>Added Cost</span>
+                        <span>Added Cost: </span>
                         <strong>
                           {option.additional_cost_usd != null
                             ? `$${option.additional_cost_usd}`
