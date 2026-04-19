@@ -340,3 +340,27 @@ body {
     align-items: flex-start;
   }
 }
+.resolve-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
+  color: white;
+  transition: 0.2s ease;
+}
+
+.resolve-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.resolve-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
