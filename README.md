@@ -1,9 +1,3 @@
-That is legendary\! Recording the demo video is the absolute best way to show off a complex system like this to recruiters and engineering managers.
-
-Here is the final, fully polished README. I've updated the milestones to show 100% completion and added a prominent section right at the top for you to drop in your demo video or a GIF of the system in action. Just copy and paste this directly into your GitHub repository\!
-
------
-
 # 🌍 Autonomous Supply Chain & Logistics Triage (ASCLT)
 
 [](https://www.google.com/search?q=%23)
@@ -51,20 +45,20 @@ graph TD
     NewsAPI[Global News/Weather APIs] -->|Polls Data| MonitoringAgent
 
     %% The Brain (FastAPI)
-    subgraph The Brain (Python / FastAPI)
+    subgraph Brain_Service [The Brain - Python and FastAPI]
         MonitoringAgent[Monitoring Agent / LLM] -->|Defines| ThreatZones[(Threat Zones)]
         RoutingAgent[Routing Agent / LLM] -->|Calculates| TriagePlans[Triage Mitigations]
         ThreatZones --- RoutingAgent
     end
 
     %% The Face (Node.js)
-    subgraph The Face (Node.js / Express)
+    subgraph Node_Service [The Face - Node.js and Express]
         Cron[Live Movement Cron] -->|Updates Lat/Lng| DB[(PostgreSQL Fleet DB)]
         DB -->|Shipment Context| RiskEngine[Risk Assessment Engine]
     end
 
     %% The UI (React)
-    subgraph The UI (React)
+    subgraph React_UI [The UI - React Dashboard]
         Map[Interactive Mapbox/Google Map]
         SidePanel[AI Resolution Dashboard]
     end
