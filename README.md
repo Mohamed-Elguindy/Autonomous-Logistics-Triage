@@ -1,5 +1,12 @@
+That is legendary\! Recording the demo video is the absolute best way to show off a complex system like this to recruiters and engineering managers.
+
+Here is the final, fully polished README. I've updated the milestones to show 100% completion and added a prominent section right at the top for you to drop in your demo video or a GIF of the system in action. Just copy and paste this directly into your GitHub repository\!
+
+-----
+
 # 🌍 Autonomous Supply Chain & Logistics Triage (ASCLT)
 
+[](https://www.google.com/search?q=%23)
 [](https://www.google.com/search?q=%23)
 [](https://www.google.com/search?q=%23)
 [](https://www.google.com/search?q=%23)
@@ -11,9 +18,22 @@
 
 -----
 
+## 🎥 System Demo
+
+
+
+**In this demo, you will see:**
+
+1.  The Node.js simulator streaming live coordinates to the React map via WebSockets.
+2.  The AI Monitoring Agent detecting a severe simulated weather event.
+3.  The system autonomously flagging the at-risk shipment.
+4.  The AI Routing Agent generating cost-calculated alternative logistics routes in real-time.
+
+-----
+
 ## ⚡ The "Wow" Factor: How It Works
 
-1.  **The World Breaks:** A typhoon forms in the Pacific. The **Monitoring Agent** (Python/AI) detects this via global weather APIs and draws a "Geospatial Threat Matrix" around the affected coordinates.
+1.  **The World Breaks:** A disruption occurs (e.g., severe weather). The **Monitoring Agent** (Python/AI) detects this via global APIs and draws a "Geospatial Threat Matrix" around the affected coordinates.
 2.  **The Fleet is Warned:** The **Node.js Engine** is constantly simulating fleet movement. It pings the Python service with current coordinates.
 3.  **The Alarm Sounds:** The Python service detects a collision course. Node.js instantly fires a WebSocket event to the **React Frontend**, flashing the compromised cargo ship red on the live map.
 4.  **Agentic Triage:** The **Routing Agent** evaluates the cargo's value, current fuel, and alternative ports. It generates three rerouting options with calculated time delays and cost impacts.
@@ -67,15 +87,15 @@ graph TD
 
 Built with **Python and FastAPI**, this service is the cognitive engine of the operation.
 
-  * **Monitoring Agent:** Uses LLMs (via Groq/OpenAI) to read unstructured news reports ("Workers walking out at Port of LA") and convert them into structured JSON threat data (Severity, Radius, Lat/Lng).
-  * **Routing Agent:** Evaluates disrupted shipments. It processes hard constraints (e.g., "$250k of electronics cannot be delayed by more than 4 days") and spits out alternative logistics routes, complete with a confidence score and estimated financial impact.
+  * **Monitoring Agent:** Uses LLMs to read unstructured disruption reports and convert them into structured JSON threat data (Severity, Radius, Lat/Lng).
+  * **Routing Agent:** Evaluates disrupted shipments. It processes hard constraints (e.g., "$250k of electronics cannot be delayed by more than 4 days") and outputs alternative logistics routes, complete with confidence scores and estimated financial impacts.
 
 ### 2\. "The Face" (Real-Time Operations)
 
 Built with **Node.js, Express, and React**, this is the nervous system and the dashboard.
 
   * **Telemetry Simulator:** A Node.js background process that steadily updates the coordinates of seeded shipments in the PostgreSQL database, pushing updates to the UI via **Socket.io**.
-  * **Geospatial Map UI:** A dark-mode, high-performance React map. It renders the active fleet, paints red radiuses over active threat zones, and houses the interactive AI Triage panel.
+  * **Geospatial Map UI:** A high-performance React map. It renders the active fleet, paints radiuses over active threat zones, and houses the interactive AI Triage panel.
 
 -----
 
@@ -86,7 +106,7 @@ The entire enterprise stack is containerized. No need to mess with local Python 
 ### Prerequisites
 
   * [Docker Desktop](https://www.google.com/search?q=https://www.docker.com/products/docker-desktop/) installed.
-  * An API Key for your LLM provider (Groq/OpenAI) and a Weather API.
+  * An API Key for your LLM provider (e.g., Groq, OpenAI) and a Weather/News API.
 
 ### 1\. Clone & Configure
 
@@ -125,14 +145,14 @@ docker-compose up --build
 
 -----
 
-## 🛣 Roadmap & Milestones
+## 🛣 Project Milestones & Completion
 
   - [x] **Phase 1:** Infrastructure foundation, Dockerization, and mock database seeding.
   - [x] **Phase 2:** Node.js WebSockets streaming live coordinates to the React Map.
-  - [ ] **Phase 3:** Python Monitoring Agent successfully parsing live API data into threat zones.
-  - [ ] **Phase 4:** End-to-end Agentic Triage (Node detects risk -\> Python creates routes -\> React displays them).
-  - [ ] **Phase 5:** "Execute Route" functionality that updates the database and alters map trajectory.
-  - [ ] **Phase 6 (Stretch):** Multi-agent negotiation (e.g., AI drafting an email to a trucking company to secure the new route).
+  - [x] **Phase 3:** Python Monitoring Agent successfully parsing live API data into threat zones.
+  - [x] **Phase 4:** End-to-end Agentic Triage (Node detects risk -\> Python creates routes -\> React displays them).
+  - [x] **Phase 5:** "Execute Route" functionality that updates the database and alters map trajectory.
+  - [x] **Phase 6:** Polish, UI enhancements, and system demo recording.
 
 -----
 
