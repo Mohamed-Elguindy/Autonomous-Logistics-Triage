@@ -21,10 +21,14 @@ class TriageRequest(BaseModel):
 class RecommendedAction(BaseModel):
     option_id: str
     strategy: str
+    new_destination: str
+    destination_lat: float
+    destination_lng: float
     new_eta: datetime
     additional_cost_usd: float
-    ai_confidence_score: float = Field(ge=0.0, le=1.0)
+    ai_confidence_score: float = Field(default=1.0, ge=0.0, le=1.0) 
     reasoning: str
+
 
 class TriageResponse(BaseModel):
     recommended_actions: List[RecommendedAction]

@@ -100,6 +100,9 @@ def format_node(state: AgentState):
         action = RecommendedAction(
             option_id=f"OPT-{idx+1}",
             strategy=draft.get("strategy", "Unknown Strategy"),
+            new_destination=draft.get("new_destination", "Unknown Destination"),
+            destination_lat=draft.get("destination_lat", 0.0),
+            destination_lng=draft.get("destination_lng", 0.0),
             new_eta=new_eta,
             additional_cost_usd=cost,
             ai_confidence_score=0.95 if dist > 0 else 1.0,
