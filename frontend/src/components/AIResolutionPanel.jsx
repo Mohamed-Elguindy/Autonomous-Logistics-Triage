@@ -1,8 +1,34 @@
-function AIResolutionPanel({ isOpen, shipment, triageResult, loading, risk }) {
+function AIResolutionPanel({
+  isOpen,
+  shipment,
+  triageResult,
+  loading,
+  risk,
+  onResolve,
+  resolvingOptionId,
+}) {
   if (!isOpen) return null;
 
   const actions = triageResult?.recommended_actions;
   const hasRecommendedActions = Array.isArray(actions) && actions.length > 0;
+
+  function formatETA(value) {
+    if (!value) return "N/A";
+
+    const date = new Date(value);
+
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    return value;
+  }
 
   return (
     <aside className="main-card ai-panel">
@@ -77,38 +103,50 @@ function AIResolutionPanel({ isOpen, shipment, triageResult, loading, risk }) {
 
             {hasRecommendedActions ? (
               <div className="actions-list">
-                {actions.map((option) => (
-                  <div
-                    className="action-card"
-                    key={option.option_id || option.strategy}
-                  >
-                    <div className="action-card-header">
-                      <h3>{option.strategy ?? "Recommended Strategy"}</h3>
-                      <span className="confidence-badge">
-                        Confidence: {option.ai_confidence_score ?? "N/A"}
-                      </span>
-                    </div>
+                {actions.map((option, index) => {
+                  const optionKey =
+                    option.option_id || option.strategy || index;
 
-                    <div className="info-grid">
-                      <div>
-                        <span>New ETA: </span>
-                        <strong>{option.new_eta ?? "N/A"}</strong>
+                  return (
+                    <div className="action-card" key={optionKey}>
+                      <div className="action-card-header">
+                        <h3>{option.strategy ?? "Recommended Strategy"}</h3>
+                        <span className="confidence-badge">
+                          Confidence: {option.ai_confidence_score ?? "N/A"}
+                        </span>
                       </div>
-                      <div>
-                        <span>Added Cost: </span>
-                        <strong>
-                          {option.additional_cost_usd != null
-                            ? `$${option.additional_cost_usd}`
-                            : "N/A"}
-                        </strong>
-                      </div>
-                    </div>
 
-                    <p className="reasoning-text">
-                      {option.reasoning ?? "No reasoning provided."}
-                    </p>
-                  </div>
-                ))}
+                      <div className="info-grid">
+                        <div>
+                          <span>New ETA: </span>
+                          <strong>{formatETA(option.new_eta)}</strong>
+                        </div>
+                        <div>
+                          <span>Added Cost: </span>
+                          <strong>
+                            {option.additional_cost_usd != null
+                              ? `$${Number(option.additional_cost_usd).toFixed(2)}`
+                              : "N/A"}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <p className="reasoning-text">
+                        {option.reasoning ?? "No reasoning provided."}
+                      </p>
+
+                      <button
+                        className="resolve-btn"
+                        onClick={() => onResolve(option)}
+                        disabled={resolvingOptionId === optionKey}
+                      >
+                        {resolvingOptionId === optionKey
+                          ? "Resolving..."
+                          : "Resolve"}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             ) : triageResult?.message ? (
               <p className="info-text">{triageResult.message}</p>

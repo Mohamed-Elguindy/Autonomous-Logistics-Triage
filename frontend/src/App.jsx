@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getAllShipments, generateTriage } from "./services/api.js";
+import {
+  getAllShipments,
+  generateTriage,
+  resolveShipment,
+} from "./services/api.js";
 import socket from "./services/socket.js";
 import MapView from "./components/MapView.jsx";
 import AIResolutionPanel from "./components/AIResolutionPanel.jsx";
@@ -13,6 +17,7 @@ function App() {
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [triageResult, setTriageResult] = useState(null);
   const [triageLoading, setTriageLoading] = useState(false);
+  const [resolvingOptionId, setResolvingOptionId] = useState(null);
 
   useEffect(() => {
     const fetchShipments = async () => {
@@ -47,6 +52,12 @@ function App() {
             : shipment,
         ),
       );
+
+      setSelectedShipment((prevSelected) =>
+        prevSelected?.shipment_id === updatedShipment.shipment_id
+          ? updatedShipment
+          : prevSelected,
+      );
     });
 
     socket.on("shipment-risk-detected", (data) => {
@@ -56,11 +67,32 @@ function App() {
       }));
     });
 
+    socket.on("shipmentResolved", ({ shipment }) => {
+      setShipments((prevShipments) =>
+        prevShipments.map((item) =>
+          item.shipment_id === shipment.shipment_id ? shipment : item,
+        ),
+      );
+
+      setSelectedShipment((prevSelected) =>
+        prevSelected?.shipment_id === shipment.shipment_id
+          ? shipment
+          : prevSelected,
+      );
+
+      setRiskyShipments((prev) => {
+        const updated = { ...prev };
+        delete updated[shipment.shipment_id];
+        return updated;
+      });
+    });
+
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("shipmentUpdated");
       socket.off("shipment-risk-detected");
+      socket.off("shipmentResolved");
     };
   }, []);
 
@@ -83,6 +115,73 @@ function App() {
       });
     } finally {
       setTriageLoading(false);
+    }
+  };
+
+  const handleResolve = async (option) => {
+    if (!selectedShipment) return;
+
+    const optionKey = option.option_id || option.strategy || "resolve-option";
+
+    try {
+      setResolvingOptionId(optionKey);
+
+      const payload = {
+        new_destination:
+          option.new_destination ||
+          option.alternative_destination ||
+          selectedShipment.destination,
+        destination_lat: Number(option.destination_lat),
+        destination_lng: Number(option.destination_lng),
+        selected_strategy: option.strategy || "AI Route Resolution",
+      };
+
+      if (
+        Number.isNaN(payload.destination_lat) ||
+        Number.isNaN(payload.destination_lng)
+      ) {
+        throw new Error(
+          "AI option is missing destination_lat or destination_lng",
+        );
+      }
+
+      const response = await resolveShipment(
+        selectedShipment.shipment_id,
+        payload,
+      );
+
+      const updatedShipment = response.data;
+
+      setShipments((prevShipments) =>
+        prevShipments.map((shipment) =>
+          shipment.shipment_id === updatedShipment.shipment_id
+            ? updatedShipment
+            : shipment,
+        ),
+      );
+
+      setSelectedShipment(updatedShipment);
+
+      setRiskyShipments((prev) => {
+        const updated = { ...prev };
+        delete updated[selectedShipment.shipment_id];
+        return updated;
+      });
+
+      setTriageResult({
+        message: `Shipment resolved successfully using "${
+          option.strategy || "selected strategy"
+        }".`,
+        recommended_actions: [],
+      });
+    } catch (err) {
+      console.error("Failed to resolve shipment:", err);
+      setTriageResult({
+        message:
+          "Failed to resolve this shipment. Make sure the AI option includes new destination coordinates.",
+      });
+    } finally {
+      setResolvingOptionId(null);
     }
   };
 
@@ -144,6 +243,8 @@ function App() {
                 ? riskyShipments[selectedShipment.shipment_id]
                 : null
             }
+            onResolve={handleResolve}
+            resolvingOptionId={resolvingOptionId}
           />
         </section>
       </main>
